@@ -2,22 +2,26 @@
 // Created by oupson on 01/03/2022.
 //
 
-#include "ssh.hpp"
-
 #include <sys/socket.h>
 #include <cstdio>
 #include <netdb.h>
 #include <stdexcept>
+
 #include <fmt/core.h>
+
+#include "ssh.hpp"
 
 Session::Session() {
     this->session = nullptr;
     this->channel = nullptr;
     this->sock = -1;
+    this->sftpSession = nullptr;
 }
 
 
 Session::~Session() {
+    // TODO
+
     if (this->isConnected()) {
         this->disconnect();
     }
@@ -135,6 +139,10 @@ void Session::openConnection(const char *addr, int port, const char *username, c
     }
 
     do {
+        this->sftpSession = libssh2_sftp_init(this->session);
+    } while (this->sftpSession == nullptr && libssh2_session_last_errno(this->session) == LIBSSH2_ERROR_EAGAIN);
+
+    do {
         this->channel = libssh2_channel_open_session(session);
     } while (this->channel == nullptr && libssh2_session_last_errno(this->session) == LIBSSH2_ERROR_EAGAIN);
 
@@ -154,6 +162,8 @@ void Session::openConnection(const char *addr, int port, const char *username, c
     do {
         rc = libssh2_channel_shell(this->channel);
     } while (rc == LIBSSH2_ERROR_EAGAIN);
+
+
 }
 
 void Session::disconnect() {

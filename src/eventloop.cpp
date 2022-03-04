@@ -2,11 +2,15 @@
 // Created by oupson on 01/03/2022.
 //
 
-#include "eventloop.hpp"
 #include <libssh2.h>
 #include <iostream>
 
-EventLoop::EventLoop() = default;
+#include "eventloop.hpp"
+#include "term_windows.hpp"
+
+EventLoop::EventLoop(FooTermWindow *window) {
+    this->window = window;
+}
 
 void EventLoop::registerFd(int fdin, EventLoopEntry entry) {
     pollfd fd = {0};
@@ -18,15 +22,20 @@ void EventLoop::registerFd(int fdin, EventLoopEntry entry) {
 
 #define BUFFER_SIZE (256)
 
-void EventLoop::run() {
+[[noreturn]] void EventLoop::run() {
     char buffer[BUFFER_SIZE];
     ssize_t bytesRead;
     int res;
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
     while (!this->isClosed) {
         res = poll(this->pfds.data(), this->pfds.size(), 1000);
+
+        if (res == 0)
+            for (auto &value: this->window->getPanels()) {
+                auto session = value.getSession().getSession();
+
+                libssh2_keepalive_send(session, nullptr);
+            }
 
         if (res > 0) {
             int i = 0;
@@ -40,7 +49,7 @@ void EventLoop::run() {
                             bytesRead = libssh2_channel_read(this->outs[i].channel, buffer, BUFFER_SIZE);
 
                             if (bytesRead > 0) {
-                                write(this->outs[i].out, buffer, bytesRead);
+                                write(this->outs[i].fdout, buffer, bytesRead);
                             } else if (bytesRead < 0 && bytesRead != LIBSSH2_ERROR_EAGAIN) {
                                 std::cout << bytesRead << std::endl;
                             }
@@ -62,8 +71,6 @@ void EventLoop::run() {
                 }
                 i++;
             }
-
         }
     }
-#pragma clang diagnostic pop
 }

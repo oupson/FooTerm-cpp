@@ -6,6 +6,7 @@
 #define FOOTERM_SSH_HPP
 
 #include <libssh2.h>
+#include <libssh2_sftp.h>
 #include <utility>
 #include <vector>
 #include <string>
@@ -15,6 +16,7 @@ private:
     LIBSSH2_SESSION *session;
     LIBSSH2_CHANNEL *channel;
     int sock;
+    LIBSSH2_SFTP* sftpSession;
 
     static int openSocket(const char *addr, int port);
 
@@ -33,12 +35,20 @@ public:
 
     bool isConnected();
 
-    int getSock() {
+    [[nodiscard]] int getSock() const {
         return this->sock;
     };
 
+    LIBSSH2_SESSION *getSession() {
+        return this->session;
+    }
+
     LIBSSH2_CHANNEL *getChannel() {
         return this->channel;
+    }
+
+    LIBSSH2_SFTP* getSftp() {
+        return this->sftpSession;
     }
 };
 

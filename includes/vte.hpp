@@ -9,17 +9,18 @@
 #include <gtkmm/widget.h>
 
 #include "eventloop.hpp"
+#include "ssh.hpp"
 
 class Vte {
+private:
+    GtkWidget *terminal;
+
 public:
     Vte();
 
-    void spawnShell(EventLoop &eventLoop, const char *host, int port, const char *username, const char *password);
+    void spawnShell(EventLoop &eventLoop, Session& session);
 
     Gtk::Widget *asGtkWidget();
-
-private:
-    GtkWidget *terminal;
 };
 
 #endif //FOOTERM_VTE_HPP

@@ -2,8 +2,7 @@
 // Created by oupson on 28/02/2022.
 //
 
-#include "vte.hpp"
-#include "term_windows.hpp"
+
 
 #include <thread>
 #include <gtkmm/headerbar.h>
@@ -13,7 +12,11 @@
 #include <gtkmm/grid.h>
 #include <iostream>
 
-FooTermWindow::FooTermWindow() {
+#include "term_windows.hpp"
+#include "vte.hpp"
+#include "panel.hpp"
+
+FooTermWindow::FooTermWindow() : eventLoop(this) {
     this->set_default_size(800, 600);
     this->add(notebook);
 
@@ -105,12 +108,16 @@ void FooTermWindow::on_button_click() {
     }
 
     try {
-        Vte *vte = new Vte();
-        vte->spawnShell(this->eventLoop, host.c_str(), port, username.c_str(), password.c_str());
+        auto *panel = new Panel(
+                this->eventLoop,
+                host.c_str(),
+                port,
+                username.c_str(),
+                password.c_str()
+        );
 
-        Gtk::Widget *widget = vte->asGtkWidget();
-        this->notebook.append_page(*widget, host, true);
-        widget->show();
+        this->notebook.append_page(panel->getPaned(), host, true);
+        panel->getPaned().show_all();
     } catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
     }

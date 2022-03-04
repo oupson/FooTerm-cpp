@@ -24,7 +24,7 @@ include_directories(
         includes
 )
 
-add_executable(FooTerm src/main.cpp src/term_windows.cpp src/vte.cpp src/ssh.cpp src/eventloop.cpp)
+add_executable(FooTerm src/main.cpp src/term_windows.cpp src/vte.cpp src/ssh.cpp src/eventloop.cpp src/panel.cpp includes/panel.hpp)
 
 target_link_libraries(FooTerm
         ${GTKMM_LIBRARIES})
@@ -32,8 +32,7 @@ target_link_libraries(FooTerm
 target_link_libraries(FooTerm ${VTE_LIBRARIES})
 add_definitions(${VTE_CFLAGS} ${VTE_CFLAGS_OTHER})
 
-
 add_subdirectory(third-party)
 find_package(fmt)
 
-target_link_libraries(FooTerm fmt::fmt ssh2)
+target_link_libraries(FooTerm fmt::fmt ssh2 pthread util)
